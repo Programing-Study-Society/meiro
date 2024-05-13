@@ -1,5 +1,4 @@
 #include<stdio.h>
-#include<stdio.h>
 #include<stdlib.h>
 #include<time.h>
 #include<string.h>
@@ -11,6 +10,8 @@ int getSecondsFromScore(int score);
 int getScoreSeconds();
 void printFormattedTime(int milliseconds);
 int getScoreFromFile(int* score, char name[][RANKING_NAME_MAX]);
+int partition(int* score, char name[][RANKING_NAME_MAX], int left, int right);
+void sortScoreQuick(int* score, char name[][RANKING_NAME_MAX], int left, int right);
 void sortScore(int* score, char name[][RANKING_NAME_MAX], int rankingNum);
 int insertScore(int* score, char name[][RANKING_NAME_MAX], int rankingNum, int newScore, char* newName, int index);
 int canRegist(int newScore);
@@ -139,6 +140,51 @@ int writeScoreToFile(int* score, char name[][RANKING_NAME_MAX], int rankingNum) 
 	return 0;
 }
 
+int partition(int* score, char name[][RANKING_NAME_MAX], int left, int right) {
+	int i, j, p;
+	char nameTemp[RANKING_NAME_MAX];
+	i = left;
+	j = right + 1;
+	p = left;
+
+	do {
+		do {
+			i++;
+		} while (score[i] < score[p]);
+		do {
+			j--;
+		} while (score[p] < score[j]);
+		if (i < j) {
+			score[j] ^= score[i];
+			score[i] ^= score[j];
+			score[j] ^= score[i];
+
+			strcpy(nameTemp, name[i]);
+			strcpy(name[i], name[j]);
+			strcpy(name[j], nameTemp);
+		}
+	} while (i < j);
+	score[j] ^= score[p];
+	score[p] ^= score[j];
+	score[j] ^= score[p];
+
+	strcpy(nameTemp, name[p]);
+	strcpy(name[p], name[j]);
+	strcpy(name[j], nameTemp);
+
+	return j;
+}
+
+void sortScoreQuick(int* score, char name[][RANKING_NAME_MAX], int left, int right) {
+	int p;
+
+	if (left < right) {
+		p = partition(score, name, left, right);
+		sortScoreQuick(score, name, left, p - 1);
+		sortScoreQuick(score, name, p + 1, right);
+	}
+}
+
 void sortScore(int* score, char name[][RANKING_NAME_MAX], int rankingNum) {
 	char nameTemp[RANKING_NAME_MAX];
 	for (int i = 0; i < rankingNum; i++) {
@@ -212,7 +258,8 @@ int registScoreToFile(int newScore, char* newName) {
 	int rankingNum = getScoreFromFile(score, name);
 	if (rankingNum == -1) return -1;
 
-	sortScore(score, name, rankingNum);
+	//sortScore(score, name, rankingNum);
+	sortScoreQuick(score, name, 0, rankingNum - 1);
 
 	index = canRegist(newScore);
 	if (index == -2) return 0;
