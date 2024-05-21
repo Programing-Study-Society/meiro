@@ -3,8 +3,19 @@
 #include <time.h>
 #include "main.h"
 
-#define ROAD 0
-#define WALL 1
+#define ROAD false
+#define WALL true
+
+void make_maze(int, int);
+int rand_odd(int);
+void maze();
+void maze_init();
+void init();
+void print();
+void output();
+void input();
+void make();
+void load();
 
 bool map[WIDTH][HEIGHT];
 struct {
@@ -23,6 +34,7 @@ void make_maze(int x, int y)
     // 掘り進める方向を決める
     int d = rand() % 4;
     int dd = d;
+
     // 掘り進める処理
     while (1) {
         // 判定用の座標を算出
@@ -65,21 +77,11 @@ void maze()
     make_maze(x, y);
 }
 
-// 迷路の出力
-void output()
-{
-    int x, y;
-    for (y = 0; y < HEIGHT; y++) {
-        for (x = 0; x < WIDTH; x++)
-            printf("%s", (map[x][y] == WALL) ? "■" : " ");
-        printf("\n");
-    }
-}
-
 // map変数の初期化(壁で埋める)
 void maze_init()
 {
     int x, y;
+
     for (y = 0; y < HEIGHT; y++)
         for (x = 0; x < WIDTH; x++)
             map[x][y] = WALL;
@@ -93,16 +95,74 @@ void init()
     srand(t);
 }
 
-int make()
+// 迷路の表示
+void print()
+{
+    int x, y;
+    for (y = 0; y < HEIGHT; y++) {
+        for (x = 0; x < WIDTH; x++)
+            printf("%s", (map[x][y] == WALL) ? "■" : " ");
+        printf("\n");
+    }
+}
+
+// 迷路の出力
+void output()
+{
+    FILE* wfp;
+    int x, y;
+
+    wfp = fopen("meiro-data.txt", "w");
+    if (wfp == NULL)
+    {
+        printf("迷路の出力処理でファイルがオープンできませんでした");
+        return;
+    }
+    for (y = 0; y < HEIGHT; y++) {
+        for (x = 0; x < WIDTH; x++)
+            fprintf(wfp, "%d", map[x][y]);
+        fprintf(wfp, "%s", "\n");
+    }
+    fclose(wfp);
+}
+
+// 迷路の入力
+void input()
+{
+    FILE* ofp;
+    char output[WIDTH + 1];
+    int x, y;
+
+    ofp = fopen("meiro-data.txt", "r");
+    if (ofp == NULL)
+    {
+        printf("迷路の入力処理でファイルがオープンできませんでした");
+        return;
+    }
+    for (y = 0; fscanf(ofp, "%s", &output) != EOF && y < HEIGHT; y++)
+    {
+        for (x = 0; x < WIDTH; x++)
+        {
+            map[x][y] = output[x] - '0';
+        }
+    }
+    fclose(ofp);
+}
+
+void make()
 {
     init();
     maze_init();
     maze();
-    // output();
-    return 0;
+    output();
 }
 
-int main()
+void load()
+{
+    input();
+}
+
+void main()
 {
     make();
     character(map);
